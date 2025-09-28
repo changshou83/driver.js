@@ -72,7 +72,7 @@ export function trackActiveElement(element: Element, step: DriveStep) {
 
   setState("__activeStagePosition", activeStagePosition);
 
-  renderInteractionAreaMask(activeStagePosition);
+  renderInteractionAreaMask(activeStagePosition, step);
   renderOverlay(activeStagePosition);
 }
 
