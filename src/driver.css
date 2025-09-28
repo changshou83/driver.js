@@ -1,11 +1,3 @@
-.driver-active .driver-overlay {
-  pointer-events: none;
-}
-
-.driver-active * {
-  pointer-events: none;
-}
-
 .driver-active .driver-active-element,
 .driver-active .driver-active-element *,
 .driver-popover,

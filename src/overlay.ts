@@ -3,6 +3,7 @@ import { onDriverClick } from "./events";
 import { emit } from "./emitter";
 import { getConfig } from "./config";
 import { getState, setState } from "./state";
+import { renderInteractionAreaMask } from "./interactionAreaMask";
 
 export type StageDefinition = {
   x: number;
@@ -51,6 +52,7 @@ export function trackActiveElement(element: Element) {
 
   setState("__activeStagePosition", activeStagePosition);
 
+  renderInteractionAreaMask(activeStagePosition);
   renderOverlay(activeStagePosition);
 }
 
@@ -77,9 +79,12 @@ function mountOverlay(stagePosition: StageDefinition) {
   const overlaySvg = createOverlaySvg(stagePosition);
   document.body.appendChild(overlaySvg);
 
-  onDriverClick(overlaySvg, e => {
-    const target = e.target as SVGElement;
-    if (target.tagName !== "path") {
+  const overlayMask = createOverlayMask();
+  document.body.appendChild(overlayMask);
+
+  onDriverClick(overlayMask, e => {
+    const target = e.target as HTMLElement;
+    if(!target.classList.contains("driver-overlay")) {
       return;
     }
 
@@ -87,6 +92,7 @@ function mountOverlay(stagePosition: StageDefinition) {
   });
 
   setState("__overlaySvg", overlaySvg);
+  setState("__overlayMask", overlayMask);
 }
 
 function renderOverlay(stagePosition: StageDefinition) {
@@ -99,8 +105,8 @@ function renderOverlay(stagePosition: StageDefinition) {
     return;
   }
 
-  const pathElement = overlaySvg.firstElementChild as SVGPathElement | null;
-  if (pathElement?.tagName !== "path") {
+  const pathElement = overlaySvg.querySelector("#stage_path");
+  if (!pathElement) {
     throw new Error("no path element found in stage svg");
   }
 
@@ -112,7 +118,7 @@ function createOverlaySvg(stage: StageDefinition): SVGSVGElement {
   const windowY = window.innerHeight;
 
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.classList.add("driver-overlay", "driver-overlay-animated");
+  svg.classList.add("driver-overlay-svg");
 
   svg.setAttribute("viewBox", `0 0 ${windowX} ${windowY}`);
   svg.setAttribute("xmlSpace", "preserve");
@@ -124,25 +130,39 @@ function createOverlaySvg(stage: StageDefinition): SVGSVGElement {
   svg.style.clipRule = "evenodd";
   svg.style.strokeLinejoin = "round";
   svg.style.strokeMiterlimit = "2";
-  svg.style.zIndex = "10000";
-  svg.style.position = "fixed";
-  svg.style.top = "0";
-  svg.style.left = "0";
-  svg.style.width = "100%";
-  svg.style.height = "100%";
+
+  const stageClipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+  stageClipPath.id = "stage_clip_path";
 
   const stagePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  stagePath.id = "stage_path";
 
   stagePath.setAttribute("d", generateStageSvgPathString(stage));
 
-  stagePath.style.fill = getConfig("overlayColor") || "rgb(0,0,0)";
-  stagePath.style.opacity = `${getConfig("overlayOpacity")}`;
-  stagePath.style.pointerEvents = "auto";
-  stagePath.style.cursor = "auto";
-
-  svg.appendChild(stagePath);
+  stageClipPath.appendChild(stagePath);
+  svg.appendChild(stageClipPath);
 
   return svg;
+}
+
+function createOverlayMask(): HTMLElement {
+  const mask = document.createElement("div");
+  mask.classList.add("driver-overlay", "driver-overlay-animated");
+
+  mask.style.zIndex = "10000";
+  mask.style.position = "fixed";
+  mask.style.top = "0";
+  mask.style.left = "0";
+  mask.style.width = "100%";
+  mask.style.height = "100%";
+  mask.style.pointerEvents = "auto";
+  mask.style.cursor = "auto";
+
+  mask.style.clipPath = "url(#stage_clip_path)";
+  mask.style.background = getConfig("overlayColor") || "rgb(0,0,0)";
+  mask.style.filter = `opacity(${getConfig("overlayOpacity")})`;
+
+  return mask;
 }
 
 function generateStageSvgPathString(stage: StageDefinition) {
@@ -174,5 +194,9 @@ export function destroyOverlay() {
   const overlaySvg = getState("__overlaySvg");
   if (overlaySvg) {
     overlaySvg.remove();
+  }
+  const overlayMask = getState("__overlayMask");
+  if (overlayMask) {
+    overlayMask.remove();
   }
 }

@@ -1,5 +1,6 @@
 import { AllowedButtons, destroyPopover, Popover } from "./popover";
 import { destroyOverlay } from "./overlay";
+import { destroyInteractionAreaMask } from "./interactionAreaMask";
 import { destroyEvents, initEvents, requireRefresh } from "./events";
 import { Config, configure, DriverHook, getConfig, getCurrentDriver, setCurrentDriver } from "./config";
 import { destroyHighlight, highlight } from "./highlight";
@@ -281,6 +282,7 @@ export function driver(options: Config = {}): Driver {
     destroyPopover();
     destroyHighlight();
     destroyOverlay();
+    destroyInteractionAreaMask();
     destroyEmitter();
 
     resetState();
