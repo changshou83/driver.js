@@ -14,6 +14,8 @@ export type DriveStep = {
   onHighlighted?: DriverHook;
   onDeselected?: DriverHook;
   popover?: Popover;
+  stageRadius?: number | 'auto';
+  stagePadding?: number;
   disableActiveInteraction?: boolean;
 };
 

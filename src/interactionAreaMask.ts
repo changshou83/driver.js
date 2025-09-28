@@ -34,8 +34,8 @@ function createInteractionAreaMask(): HTMLElement {
 function updateInteractionAreaMask(stage: StageDefinition) {
   const interactionAreaMask = getState("__interactionAreaMask");
 
-  const stagePadding = getConfig("stagePadding") || 0;
-  const stageRadius = getConfig("stageRadius") || 0;
+  const stagePadding = stage.padding || 0;
+  const stageRadius = stage.radius || 0;
 
   const stageWidth = stage.width + stagePadding * 2;
   const stageHeight = stage.height + stagePadding * 2;

@@ -51,7 +51,7 @@ export function refreshActiveHighlight() {
     return;
   }
 
-  trackActiveElement(activeHighlight);
+  trackActiveElement(activeHighlight, activeStep);
   refreshOverlay();
   repositionPopover(activeHighlight, activeStep);
 }
@@ -124,9 +124,9 @@ function transferHighlight(toElement: Element, toStep: DriveStep) {
     }
 
     if (getConfig("animate") && elapsed < duration) {
-      transitionStage(elapsed, duration, fromElement, toElement);
+      transitionStage(elapsed, duration, fromElement, toElement, toStep);
     } else {
-      trackActiveElement(toElement);
+      trackActiveElement(toElement, toStep);
 
       if (highlightedHook) {
         highlightedHook(isToDummyElement ? undefined : toElement, toStep, {
