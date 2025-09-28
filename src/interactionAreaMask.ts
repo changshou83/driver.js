@@ -1,6 +1,7 @@
 import { getConfig } from "./config";
 import { getState, setState } from "./state";
 import { StageDefinition } from "./overlay";
+import { DriveStep } from "./driver";
 
 function mountInteractionAreaMask() {
   const interactionAreaMask = createInteractionAreaMask();
@@ -9,14 +10,14 @@ function mountInteractionAreaMask() {
   setState("__interactionAreaMask", interactionAreaMask);
 }
 
-export function renderInteractionAreaMask(stagePosition: StageDefinition) {
+export function renderInteractionAreaMask(stagePosition: StageDefinition, step: DriveStep) {
   const interactionAreaMask = getState("__interactionAreaMask");
 
   if (!interactionAreaMask) {
     mountInteractionAreaMask();
   }
 
-  updateInteractionAreaMask(stagePosition);
+  updateInteractionAreaMask(stagePosition, step);
 }
 
 function createInteractionAreaMask(): HTMLElement {
@@ -31,11 +32,11 @@ function createInteractionAreaMask(): HTMLElement {
   return mask;
 }
 
-function updateInteractionAreaMask(stage: StageDefinition) {
+function updateInteractionAreaMask(stage: StageDefinition, step: DriveStep) {
   const interactionAreaMask = getState("__interactionAreaMask");
 
-  const stagePadding = getConfig("stagePadding") || 0;
-  const stageRadius = getConfig("stageRadius") || 0;
+  const stagePadding = stage.padding || 0;
+  const stageRadius = stage.radius || 0;
 
   const stageWidth = stage.width + stagePadding * 2;
   const stageHeight = stage.height + stagePadding * 2;
@@ -54,7 +55,7 @@ function updateInteractionAreaMask(stage: StageDefinition) {
   interactionAreaMask!.style.width = stageWidth + "px";
   interactionAreaMask!.style.height = stageHeight + "px";
   interactionAreaMask!.style.borderRadius = radius + "px";
-  interactionAreaMask!.style.pointerEvents = getConfig("disableActiveInteraction") ? "auto" : "none";
+  interactionAreaMask!.style.pointerEvents = step.disableActiveInteraction ?? getConfig("disableActiveInteraction") ? "auto" : "none";
 }
 
 export function destroyInteractionAreaMask() {

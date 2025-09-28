@@ -18,7 +18,7 @@ export type Config = {
   allowClose?: boolean;
   overlayClickBehavior?: "close" | "nextStep";
   stagePadding?: number;
-  stageRadius?: number;
+  stageRadius?: number | 'auto';
 
   disableActiveInteraction?: boolean;
 

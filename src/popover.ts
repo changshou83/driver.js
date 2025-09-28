@@ -242,7 +242,7 @@ type PopoverDimensions = {
   realHeight: number;
 };
 
-function getPopoverDimensions(): PopoverDimensions | undefined {
+function getPopoverDimensions(step: DriveStep): PopoverDimensions | undefined {
   const popover = getState("popover");
   if (!popover?.wrapper) {
     return;
@@ -250,7 +250,7 @@ function getPopoverDimensions(): PopoverDimensions | undefined {
 
   const boundingClientRect = popover.wrapper.getBoundingClientRect();
 
-  const stagePadding = getConfig("stagePadding") || 0;
+  const stagePadding = (step.stagePadding ?? getConfig("stagePadding")) ?? 0;
   const popoverOffset = getConfig("popoverOffset") || 0;
 
   return {
@@ -362,9 +362,9 @@ export function repositionPopover(element: Element, step: DriveStep) {
   // Configure the popover positioning
   const requiredAlignment: Alignment = align;
   const requiredSide: Side = element.id === "driver-dummy-element" ? "over" : side;
-  const popoverPadding = getConfig("stagePadding") || 0;
+  const popoverPadding = (step.stagePadding ?? getConfig("stagePadding")) ?? 0;
 
-  const popoverDimensions = getPopoverDimensions()!;
+  const popoverDimensions = getPopoverDimensions(step)!;
   const popoverArrowDimensions = popover.arrow.getBoundingClientRect();
   const elementDimensions = element.getBoundingClientRect();
 
@@ -491,20 +491,20 @@ export function repositionPopover(element: Element, step: DriveStep) {
   // pointing to the top. If the element scrolled out of the screen to the bottom,
   // the arrow should be rendered pointing to the bottom.
   if (!noneOptimal) {
-    renderPopoverArrow(requiredAlignment, popoverRenderedSide, element);
+    renderPopoverArrow(requiredAlignment, popoverRenderedSide, element, step);
   } else {
     popover.arrow.classList.add("driver-popover-arrow-none");
   }
 }
 
-function renderPopoverArrow(alignment: Alignment, side: Side, element: Element) {
+function renderPopoverArrow(alignment: Alignment, side: Side, element: Element, step: DriveStep) {
   const popover = getState("popover");
   if (!popover) {
     return;
   }
 
   const elementDimensions = element.getBoundingClientRect();
-  const popoverDimensions = getPopoverDimensions()!;
+  const popoverDimensions = getPopoverDimensions(step)!;
   const popoverArrow = popover.arrow;
 
   const popoverWidth = popoverDimensions.width;
@@ -595,7 +595,7 @@ function renderPopoverArrow(alignment: Alignment, side: Side, element: Element) 
 
     const elementRect = element.getBoundingClientRect();
     const arrowRect = popoverArrow.getBoundingClientRect();
-    const stagePadding = getConfig("stagePadding") || 0;
+    const stagePadding = (step.stagePadding ?? getConfig("stagePadding")) ?? 0;
 
     const isElementPartiallyInViewPort =
       elementRect.left - stagePadding < window.innerWidth &&

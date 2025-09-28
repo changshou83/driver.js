@@ -1,58 +1,78 @@
-import { easeInOutQuad } from "./utils";
+import { easeInOutQuad, getElementBorderRadius } from "./utils";
 import { onDriverClick } from "./events";
 import { emit } from "./emitter";
 import { getConfig } from "./config";
 import { getState, setState } from "./state";
 import { renderInteractionAreaMask } from "./interactionAreaMask";
+import { DriveStep } from "./driver";
 
 export type StageDefinition = {
   x: number;
   y: number;
   width: number;
   height: number;
+  radius: number;
+  padding: number;
 };
 
 // This method calculates the animated new position of the
 // stage (called for each frame by requestAnimationFrame)
-export function transitionStage(elapsed: number, duration: number, from: Element, to: Element) {
+export function transitionStage(elapsed: number, duration: number, from: Element, to: Element, step: DriveStep) {
   let activeStagePosition = getState("__activeStagePosition");
 
-  const fromDefinition = activeStagePosition ? activeStagePosition : from.getBoundingClientRect();
-  const toDefinition = to.getBoundingClientRect();
+  const radiusConfig = (step?.stageRadius ?? getConfig("stageRadius")) ?? 0;
+  const paddingConfig = (step?.stagePadding ?? getConfig("stagePadding")) ?? 0;
+
+  const fromDefinition = activeStagePosition ? activeStagePosition : (() => {
+    const rect = from.getBoundingClientRect();
+    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height, radius: getElementBorderRadius(from, radiusConfig), padding: paddingConfig };
+  })();
+  const toDefinition = (() => {
+    const toRect = to.getBoundingClientRect();
+    return { x: toRect.x, y: toRect.y, width: toRect.width, height: toRect.height, radius: getElementBorderRadius(to, radiusConfig), padding: paddingConfig };
+  })();
 
   const x = easeInOutQuad(elapsed, fromDefinition.x, toDefinition.x - fromDefinition.x, duration);
   const y = easeInOutQuad(elapsed, fromDefinition.y, toDefinition.y - fromDefinition.y, duration);
   const width = easeInOutQuad(elapsed, fromDefinition.width, toDefinition.width - fromDefinition.width, duration);
   const height = easeInOutQuad(elapsed, fromDefinition.height, toDefinition.height - fromDefinition.height, duration);
+  const radius = easeInOutQuad(elapsed, fromDefinition.radius, toDefinition.radius - fromDefinition.radius, duration);
+  const padding = easeInOutQuad(elapsed, fromDefinition.padding, toDefinition.padding - fromDefinition.padding, duration);
 
   activeStagePosition = {
     x,
     y,
     width,
     height,
+    radius,
+    padding,
   };
 
   renderOverlay(activeStagePosition);
   setState("__activeStagePosition", activeStagePosition);
 }
 
-export function trackActiveElement(element: Element) {
+export function trackActiveElement(element: Element, step: DriveStep) {
   if (!element) {
     return;
   }
 
   const definition = element.getBoundingClientRect();
+  const radius = (step.stageRadius ?? getConfig("stageRadius")) ?? 0;
+  const padding = (step.stagePadding ?? getConfig("stagePadding")) ?? 0;
 
   const activeStagePosition: StageDefinition = {
     x: definition.x,
     y: definition.y,
     width: definition.width,
     height: definition.height,
+    radius: getElementBorderRadius(element, radius),
+    padding,
   };
 
   setState("__activeStagePosition", activeStagePosition);
 
-  renderInteractionAreaMask(activeStagePosition);
+  renderInteractionAreaMask(activeStagePosition, step);
   renderOverlay(activeStagePosition);
 }
 
@@ -169,8 +189,8 @@ function generateStageSvgPathString(stage: StageDefinition) {
   const windowX = window.innerWidth;
   const windowY = window.innerHeight;
 
-  const stagePadding = getConfig("stagePadding") || 0;
-  const stageRadius = getConfig("stageRadius") || 0;
+  const stagePadding = stage.padding || 0;
+  const stageRadius = stage.radius || 0;
 
   const stageWidth = stage.width + stagePadding * 2;
   const stageHeight = stage.height + stagePadding * 2;

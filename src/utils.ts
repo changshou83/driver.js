@@ -65,3 +65,19 @@ function isElementInView(element: Element) {
 export function isElementVisible(el: HTMLElement) {
   return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
 }
+
+export function getElementBorderRadius(element: Element, stageRadius: number | 'auto') {
+  if (stageRadius !== 'auto') {
+    return stageRadius ?? 0;
+  }
+
+  const computedStyle = window.getComputedStyle(element);
+  const borderRadius = computedStyle.borderRadius;
+
+  if (borderRadius && borderRadius !== '0px') {
+    const parsedValue = parseFloat(borderRadius);
+    return !isNaN(parsedValue) ? parsedValue : 0;
+  }
+
+  return 0;
+}
